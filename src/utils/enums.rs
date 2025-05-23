@@ -19,6 +19,7 @@ pub enum Event {
 pub struct App {
     pub exit: bool,
     pub current_screen: CurrentScreen,
+    pub menu_cursor: Option<usize>,
     pub direction: Direction,
     pub snake: Vec<(f64, f64)>,
     pub speed: u32,

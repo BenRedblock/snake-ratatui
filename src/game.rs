@@ -15,7 +15,8 @@ impl App {
     pub fn new() -> Self {
         App {
             exit: false,
-            current_screen: CurrentScreen::Main,
+            current_screen: CurrentScreen::Menu,
+            menu_cursor: None,
             direction: Direction::Up,
             snake: vec![(21.0, 20.0), (22.0, 20.0), (20.0, 20.0)],
             speed: 4,
@@ -84,7 +85,10 @@ impl App {
                 _ => self.handle_movement_input(&key_event),
             },
             CurrentScreen::Lost => {}
-            CurrentScreen::Menu => {}
+            CurrentScreen::Menu => match key_event.code {
+                event::KeyCode::Esc => self.exit = true,
+                _ => self.handle_movement_input(&key_event),
+            },
         }
     }
 

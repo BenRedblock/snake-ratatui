@@ -1,13 +1,14 @@
-use crate::utils::helpers::vec_to_string;
+use crate::utils::{enums::CurrentScreen, helpers::vec_to_string};
 
 use super::utils::enums::App;
 use ratatui::{
     Frame,
+    layout::{Constraint, Layout},
     style::{Color, Style},
     symbols::Marker,
     text::Text,
     widgets::{
-        Block, Paragraph,
+        Block, Padding, Paragraph,
         canvas::{Canvas, Points},
     },
 };
@@ -45,25 +46,12 @@ pub fn render(frame: &mut Frame, app: &App) {
         .split(vertical_chunks[1]);
     let inner_area = chunks[1];
 
-    let canvas = Canvas::default()
-        .block(
-            Block::default()
-                .title("Game Area")
-                .borders(ratatui::widgets::Borders::ALL),
-        )
-        .x_bounds([0.0, width as f64])
-        .y_bounds([0.0, height as f64])
-        .marker(Marker::HalfBlock)
-        .paint(|ctx| {
-            ctx.draw(&Points {
-                coords: &app.snake,
-                color: Color::Red,
-            })
-        });
-    frame.render_widget(canvas, inner_area);
-
     let left_block = Block::default()
         .title("Left Bar")
+        .borders(ratatui::widgets::Borders::ALL)
+        .style(Style::default());
+
+    let right_block = Block::default()
         .borders(ratatui::widgets::Borders::ALL)
         .style(Style::default());
 
@@ -71,4 +59,42 @@ pub fn render(frame: &mut Frame, app: &App) {
         .block(left_block)
         .style(Style::default().fg(Color::White).bg(Color::Black));
     frame.render_widget(paragraphs, chunks[0]);
+    frame.render_widget(right_block, chunks[2]);
+
+    match app.current_screen {
+        CurrentScreen::Main => {
+            let canvas = Canvas::default()
+                .block(
+                    Block::default()
+                        .title("Game Area")
+                        .borders(ratatui::widgets::Borders::ALL),
+                )
+                .x_bounds([0.0, width as f64])
+                .y_bounds([0.0, height as f64])
+                .marker(Marker::HalfBlock)
+                .paint(|ctx| {
+                    ctx.draw(&Points {
+                        coords: &app.snake,
+                        color: Color::Red,
+                    })
+                });
+            frame.render_widget(canvas, inner_area);
+        }
+        CurrentScreen::Menu => {
+            let start_text =
+                Paragraph::new(Text::from("Start Game")).style(Style::default().fg(Color::Green));
+            let quit_text =
+                Paragraph::new(Text::from("Quit")).style(Style::default().fg(Color::Red));
+            let menu_block = Block::default().padding(Padding::symmetric(20, 40));
+            let menu_area = menu_block.inner(inner_area);
+
+            let menu_layout =
+                Layout::vertical([Constraint::Fill(1), Constraint::Fill(1)]).split(menu_area);
+            frame.render_widget(start_text, menu_layout[0]);
+            frame.render_widget(quit_text, menu_layout[1]);
+        }
+        CurrentScreen::Lost => {
+            // Render the lost screen
+        }
+    }
 }
