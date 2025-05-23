@@ -19,6 +19,7 @@ impl App {
             direction: Direction::Up,
             snake: vec![(21.0, 20.0), (22.0, 20.0), (20.0, 20.0)],
             speed: 4,
+            blocked: true,
         }
     }
 
@@ -80,13 +81,35 @@ impl App {
         match self.current_screen {
             CurrentScreen::Main => match key_event.code {
                 event::KeyCode::Esc => self.exit = true,
-                event::KeyCode::Up => self.direction = Direction::Up,
-                event::KeyCode::Down => self.direction = Direction::Down,
-                event::KeyCode::Left => self.direction = Direction::Left,
-                event::KeyCode::Right => self.direction = Direction::Right,
-                _ => {}
+                _ => self.handle_movement_input(&key_event),
             },
+            CurrentScreen::Lost => {}
             CurrentScreen::Menu => {}
+        }
+    }
+
+    fn handle_movement_input(&mut self, key_event: &KeyEvent) {
+        if !self.blocked {
+            match key_event.code {
+                event::KeyCode::Up => match self.direction {
+                    Direction::Down => (),
+                    _ => self.direction = Direction::Up,
+                },
+                event::KeyCode::Down => match self.direction {
+                    Direction::Up => (),
+                    _ => self.direction = Direction::Down,
+                },
+                event::KeyCode::Left => match self.direction {
+                    Direction::Right => (),
+                    _ => self.direction = Direction::Left,
+                },
+                event::KeyCode::Right => match self.direction {
+                    Direction::Left => (),
+                    _ => self.direction = Direction::Right,
+                },
+                _ => {}
+            }
+            self.blocked = true;
         }
     }
 
@@ -101,5 +124,6 @@ impl App {
         };
         self.snake.insert(0, new_head);
         self.snake.pop();
+        self.blocked = false;
     }
 }

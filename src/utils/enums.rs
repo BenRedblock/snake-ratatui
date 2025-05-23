@@ -1,6 +1,7 @@
 pub enum CurrentScreen {
     Main,
     Menu,
+    Lost,
 }
 
 pub enum Direction {
@@ -21,4 +22,5 @@ pub struct App {
     pub direction: Direction,
     pub snake: Vec<(f64, f64)>,
     pub speed: u32,
+    pub blocked: bool,
 }
