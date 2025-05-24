@@ -16,11 +16,12 @@ impl App {
         App {
             exit: false,
             current_screen: CurrentScreen::Menu,
-            menu_cursor: None,
+            menu_cursor: Some(0),
             direction: Direction::Up,
             snake: vec![(21.0, 20.0), (22.0, 20.0), (20.0, 20.0)],
             speed: 4,
             blocked: true,
+            field_size: (100, 50),
         }
     }
 
@@ -84,11 +85,58 @@ impl App {
                 event::KeyCode::Esc => self.exit = true,
                 _ => self.handle_movement_input(&key_event),
             },
-            CurrentScreen::Lost => {}
+            CurrentScreen::Lost => match key_event.code {
+                event::KeyCode::Esc => self.exit = true,
+                _ => {
+                    self.current_screen = CurrentScreen::Menu;
+                    self.menu_cursor = Some(0);
+                }
+            },
             CurrentScreen::Menu => match key_event.code {
                 event::KeyCode::Esc => self.exit = true,
-                _ => self.handle_movement_input(&key_event),
+
+                _ => self.handle_menu_input(&key_event),
             },
+        }
+    }
+
+    fn handle_menu_input(&mut self, key_event: &KeyEvent) {
+        match key_event.code {
+            event::KeyCode::Up => {
+                if let Some(cursor) = self.menu_cursor {
+                    self.menu_cursor = Some(if cursor == 0 { 0 } else { cursor - 1 });
+                } else {
+                    self.menu_cursor = Some(0);
+                }
+            }
+            event::KeyCode::Down => {
+                if let Some(cursor) = self.menu_cursor {
+                    self.menu_cursor = Some(if cursor == 1 { 1 } else { cursor + 1 });
+                } else {
+                    self.menu_cursor = Some(0);
+                }
+            }
+            event::KeyCode::Enter => {
+                if let Some(cursor) = self.menu_cursor {
+                    match cursor {
+                        0 => {
+                            self.current_screen = CurrentScreen::Main;
+                            self.snake = vec![
+                                (23.0, 20.0),
+                                (22.0, 20.0),
+                                (21.0, 20.0),
+                                (20.0, 20.0),
+                                (19.0, 20.0),
+                            ];
+                            self.direction = Direction::Right;
+                            self.menu_cursor = None;
+                        }
+                        1 => self.exit = true,
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
@@ -118,7 +166,15 @@ impl App {
     }
 
     fn on_tick(&mut self) {
-        // Update the snake's position based on the current direction
+        if let CurrentScreen::Main = self.current_screen {
+            self.update_snake_position();
+            if self.has_snake_collision() {
+                self.current_screen = CurrentScreen::Lost;
+            }
+        }
+    }
+
+    fn update_snake_position(&mut self) {
         let (head_x, head_y) = self.snake[0];
         let new_head = match self.direction {
             Direction::Up => (head_x, head_y + 0.5),
@@ -129,5 +185,22 @@ impl App {
         self.snake.insert(0, new_head);
         self.snake.pop();
         self.blocked = false;
+    }
+    fn has_snake_collision(&self) -> bool {
+        let head = self.snake[0];
+        for segment in &self.snake[1..] {
+            if head == *segment {
+                return true;
+            }
+        }
+        if head.0 >= self.field_size.0 as f64
+            || head.0 <= 0.0
+            || head.1 >= self.field_size.1 as f64
+            || head.1 <= 0.0
+        {
+            return true;
+        }
+
+        false
     }
 }

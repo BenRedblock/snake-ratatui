@@ -24,4 +24,5 @@ pub struct App {
     pub snake: Vec<(f64, f64)>,
     pub speed: u32,
     pub blocked: bool,
+    pub field_size: (u32, u32),
 }
