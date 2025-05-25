@@ -6,8 +6,13 @@
 - [x] Move Snake
 - [x] Collision Detection
 - [x] Game Over
-- [ ] Score Tracking
-- [ ] Increase Tail
+- [x] Score Tracking
+- [x] Add Food
+- [x] Increase Tail
+- [ ] Add Settings Menu
+- [ ] Add Pause Functionality
+- [ ] Change Speed
+- [ ] Add more Collectables
 
 
 ## Future plans:
