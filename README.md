@@ -1,11 +1,11 @@
 # Ratatui Snake Game
 
 ## Todo:
-- [ ] Make input working
-- [ ] Render Snake
-- [ ] Move Snake
-- [ ] Collision Detection
-- [ ] Game Over
+- [x] Make input working
+- [x] Render Snake
+- [x] Move Snake
+- [x] Collision Detection
+- [x] Game Over
 - [ ] Score Tracking
 - [ ] Increase Tail
 
