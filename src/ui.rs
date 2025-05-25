@@ -1,4 +1,7 @@
-use crate::utils::{enums::CurrentScreen, helpers::vec_to_string};
+use crate::utils::{
+    enums::{CollectableType, CurrentScreen},
+    helpers::vec_to_string,
+};
 
 use super::utils::enums::App;
 use ratatui::{
@@ -22,8 +25,9 @@ pub fn render(frame: &mut Frame, app: &App) {
         .direction(ratatui::layout::Direction::Vertical)
         .constraints(
             [
-                ratatui::layout::Constraint::Min(0),
+                ratatui::layout::Constraint::Max(4),
                 ratatui::layout::Constraint::Length((app.field_size.1 + 2) as u16),
+                ratatui::layout::Constraint::Min(0),
             ]
             .as_ref(),
         )
@@ -78,6 +82,14 @@ pub fn render(frame: &mut Frame, app: &App) {
                 coords: &app.snake[..1],
                 color: Color::Green,
             });
+            for collectable in &app.collectables {
+                ctx.draw(&Points {
+                    coords: &[collectable.get_position()],
+                    color: match collectable.collectable_type {
+                        CollectableType::Apple => Color::Red,
+                    },
+                });
+            }
         });
     match app.current_screen {
         CurrentScreen::Main => {

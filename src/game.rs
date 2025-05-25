@@ -4,12 +4,12 @@ use std::{
     time::Duration,
 };
 
-use crossterm::event::{self, KeyEvent};
-
 use crate::{
     ui,
-    utils::enums::{App, CurrentScreen, Direction, Event},
+    utils::enums::{App, Collectable, CurrentScreen, Direction, Event},
 };
+use crossterm::event::{self, KeyEvent};
+use rand::random_range;
 
 impl App {
     pub fn new() -> Self {
@@ -19,10 +19,11 @@ impl App {
             menu_cursor: Some(0),
             direction: Direction::Up,
             snake: vec![(21.0, 20.0), (22.0, 20.0), (20.0, 20.0)],
-            tick_rate: 4,
+            tick_rate: 3,
             blocked: true,
-            field_size: (100, 50),
+            field_size: (50, 25),
             tick: false,
+            collectables: vec![],
         }
     }
 
@@ -131,6 +132,7 @@ impl App {
                             ];
                             self.direction = Direction::Right;
                             self.menu_cursor = None;
+                            self.spawn_item();
                         }
                         1 => self.exit = true,
                         _ => {}
@@ -176,14 +178,35 @@ impl App {
         }
     }
 
+    fn spawn_item(&mut self) {
+        let x: f64 = random_range(1..self.field_size.0 - 1) as f64;
+        let y: f64 = random_range(1..self.field_size.1 - 1) as f64;
+        let new_collectable = Collectable::new(x, y);
+        if self.snake.contains(&new_collectable.get_position()) {
+            self.spawn_item();
+        } else {
+            self.collectables.push(new_collectable);
+        }
+    }
+
     fn game_update(&mut self) {
-        self.update_snake_position();
+        // Check if the snake has eaten a collectable
+        let mut remove_tail = true;
+        for i in 0..self.collectables.len() {
+            if self.snake[0] == self.collectables[i].get_position() {
+                self.collectables.remove(i);
+                remove_tail = false;
+                self.spawn_item();
+            }
+        }
+        self.update_snake_position(remove_tail);
+
         if self.has_snake_collision() {
             self.current_screen = CurrentScreen::Lost;
         }
     }
 
-    fn update_snake_position(&mut self) {
+    fn update_snake_position(&mut self, remove_tail: bool) {
         let (head_x, head_y) = self.snake[0];
         let new_head = match self.direction {
             Direction::Up => (head_x, head_y + 0.5),
@@ -192,7 +215,9 @@ impl App {
             Direction::Right => (head_x + 1.0, head_y),
         };
         self.snake.insert(0, new_head);
-        self.snake.pop();
+        if remove_tail {
+            self.snake.pop();
+        }
         self.blocked = false;
     }
     fn has_snake_collision(&self) -> bool {

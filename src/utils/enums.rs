@@ -16,6 +16,15 @@ pub enum Event {
     GameTick,
 }
 
+pub enum CollectableType {
+    Apple,
+}
+
+pub struct Collectable {
+    pub position: (f64, f64),
+    pub collectable_type: CollectableType,
+}
+
 pub struct App {
     pub exit: bool,
     pub current_screen: CurrentScreen,
@@ -26,4 +35,5 @@ pub struct App {
     pub blocked: bool,
     pub field_size: (u32, u32),
     pub tick: bool,
+    pub collectables: Vec<Collectable>,
 }
