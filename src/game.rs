@@ -34,7 +34,7 @@ impl App {
         let (event_tx, event_rx) = mpsc::channel::<Event>();
 
         self.create_threads(event_tx);
-        let mut counter = 0;
+        let mut counter = 3;
         while !self.exit {
             let _ = terminal.draw(|frame| {
                 ui::render(frame, &self);
@@ -45,12 +45,12 @@ impl App {
                         self.handle_input_events(key_event);
                     }
                     Event::GameTick => {
+                        counter -= 1;
                         self.on_tick(&mut counter);
                         if counter == 0 {
                             counter = 3;
                             self.tick = !self.tick;
                         }
-                        counter -= 1;
                     }
                 }
             }
@@ -179,7 +179,7 @@ impl App {
             CurrentScreen::Lost => {}
             CurrentScreen::Main => {
                 self.round_time += 50;
-                if *counter == 0 || *counter == self.game_speed {
+                if *counter == self.game_speed || *counter == 0 {
                     self.game_update();
                     *counter = 3;
                 }
@@ -199,20 +199,23 @@ impl App {
     }
 
     fn game_update(&mut self) {
-        // Check if the snake has eaten a collectable
-        let mut remove_tail = true;
-        for i in 0..self.collectables.len() {
-            if self.snake[0] == self.collectables[i].get_position() {
-                self.collectables.remove(i);
-                remove_tail = false;
-                self.spawn_item();
-            }
-        }
+        let remove_tail = !self.check_snake_collectable_collision();
         self.update_snake_position(remove_tail);
 
         if self.has_snake_collision() {
             self.current_screen = CurrentScreen::Lost;
         }
+    }
+
+    fn check_snake_collectable_collision(&mut self) -> bool {
+        for i in 0..self.collectables.len() {
+            if self.snake[0] == self.collectables[i].get_position() {
+                self.collectables.remove(i);
+                self.spawn_item();
+                return true;
+            }
+        }
+        false
     }
 
     fn update_snake_position(&mut self, remove_tail: bool) {

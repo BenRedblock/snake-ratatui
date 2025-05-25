@@ -11,7 +11,7 @@ use ratatui::{
     symbols::Marker,
     text::{Line, Span, Text},
     widgets::{
-        Block, BorderType, Padding, Paragraph,
+        Block, BorderType, Clear, Padding, Paragraph,
         canvas::{Canvas, Points},
     },
 };
@@ -40,35 +40,15 @@ pub fn render(frame: &mut Frame, app: &App) {
         .split(vertical_chunks[0]);
     let inner_area = horizontal_chunks[1];
 
-    let left_block = Block::default()
-        .title("Left Bar")
-        .borders(ratatui::widgets::Borders::ALL)
-        .style(Style::default());
-
-    let mut score_lines = vec![];
-
-    let score_span = Span::from(format!("Score: {}", app.snake.len() - 3));
-    let time_span = Span::from(format!("Time: {}", convert_ms_to_string(&app.round_time)));
-    score_lines.push(Line::from(score_span));
-    score_lines.push(Line::from(time_span));
-
-    let speed_color = match app.game_speed {
-        speed if speed <= 0 => Color::Green,
-        speed if speed <= 1 => Color::Yellow,
-        _ => Color::Red,
-    };
-    let speed_text =
-        Span::from(format!("Speed: {:.2}", app.game_speed)).style(Style::default().fg(speed_color));
-    score_lines.push(Line::from(speed_text));
-
-    let paragraphs = Paragraph::new(score_lines);
-
     let right_block = Block::default()
         .borders(ratatui::widgets::Borders::ALL)
         .style(Style::default());
-    frame.render_widget(paragraphs, horizontal_chunks[0]);
-    frame.render_widget(right_block, horizontal_chunks[2]);
 
+    let left_block = Block::default()
+        .borders(ratatui::widgets::Borders::ALL)
+        .style(Style::default());
+
+    // Game area canvas
     let canvas = Canvas::default()
         .block(
             Block::default()
@@ -80,14 +60,6 @@ pub fn render(frame: &mut Frame, app: &App) {
         .y_bounds([0.0, app.field_size.1 as f64])
         .marker(Marker::HalfBlock)
         .paint(|ctx| {
-            ctx.draw(&Points {
-                coords: &app.snake[1..],
-                color: Color::Red,
-            });
-            ctx.draw(&Points {
-                coords: &app.snake[..1],
-                color: Color::Green,
-            });
             for collectable in &app.collectables {
                 ctx.draw(&Points {
                     coords: &[collectable.get_position()],
@@ -96,10 +68,38 @@ pub fn render(frame: &mut Frame, app: &App) {
                     },
                 });
             }
+            ctx.draw(&Points {
+                coords: &app.snake[1..],
+                color: Color::LightGreen,
+            });
+            ctx.draw(&Points {
+                coords: &app.snake[..1],
+                color: Color::Green,
+            });
         });
+
+    // Score and time display
+    let mut score_lines = vec![];
+    let score_span = Span::from(format!("Score: {}", app.snake.len() as i32 - 5));
+    let time_span = Span::from(format!("Time: {}", convert_ms_to_string(&app.round_time)));
+    score_lines.push(Line::from(score_span));
+    score_lines.push(Line::from(time_span));
+    let speed_color = match app.game_speed {
+        speed if speed <= 0 => Color::Green,
+        speed if speed <= 1 => Color::Yellow,
+        _ => Color::Red,
+    };
+    let speed_text =
+        Span::from(format!("Speed: {:.2}", app.game_speed)).style(Style::default().fg(speed_color));
+    score_lines.push(Line::from(speed_text));
+
     match app.current_screen {
         CurrentScreen::Main => {
             frame.render_widget(canvas, inner_area);
+
+            let paragraphs = Paragraph::new(score_lines).block(left_block.title("Game Info"));
+            frame.render_widget(paragraphs, horizontal_chunks[0]);
+            frame.render_widget(right_block, horizontal_chunks[2]);
         }
         CurrentScreen::Menu => {
             let start_game_text = match app.menu_cursor {
@@ -144,14 +144,17 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(menu_block, inner_area);
             frame.render_widget(start_paragraph, menu_layout[0]);
             frame.render_widget(quit_paragraph, menu_layout[1]);
+            // Left and right blocks
+            frame.render_widget(left_block, horizontal_chunks[0]);
+            frame.render_widget(right_block, horizontal_chunks[2]);
         }
         CurrentScreen::Lost => {
             frame.render_widget(canvas, inner_area);
-            let [inner_area] = Layout::horizontal([Constraint::Length(50)])
+            let [inner_area] = Layout::horizontal([Constraint::Length(40)])
                 .flex(Flex::Center)
                 .areas(inner_area);
 
-            let [inner_area] = Layout::vertical([Constraint::Length(3)])
+            let [inner_area] = Layout::vertical([Constraint::Length(4)])
                 .flex(Flex::Center)
                 .areas(inner_area);
 
@@ -160,12 +163,19 @@ pub fn render(frame: &mut Frame, app: &App) {
                 .borders(ratatui::widgets::Borders::ALL)
                 .style(Style::default().fg(Color::Red));
 
-            let lost_text =
-                Paragraph::new(Text::from("You lost! Press Enter to return to the menu."))
-                    .style(Style::default().fg(Color::White))
-                    .centered()
-                    .block(lost_block);
+            let lost_text = Paragraph::new(vec![
+                Line::from("You lost!"),
+                Line::from("Press Enter to return to the menu."),
+            ])
+            .style(Style::default().fg(Color::White))
+            .centered()
+            .block(lost_block);
+            frame.render_widget(Clear::default(), inner_area);
             frame.render_widget(lost_text, inner_area);
+            // Left and right blocks
+            let paragraphs = Paragraph::new(score_lines).block(left_block.title("Game Info"));
+            frame.render_widget(paragraphs, horizontal_chunks[0]);
+            frame.render_widget(right_block, horizontal_chunks[2]);
         }
     }
 }
