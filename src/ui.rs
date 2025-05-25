@@ -23,7 +23,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         .constraints(
             [
                 ratatui::layout::Constraint::Min(0),
-                ratatui::layout::Constraint::Length(app.field_size.1 as u16),
+                ratatui::layout::Constraint::Length((app.field_size.1 + 2) as u16),
             ]
             .as_ref(),
         )
@@ -36,7 +36,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         .constraints(
             [
                 ratatui::layout::Constraint::Min(0),
-                ratatui::layout::Constraint::Length(app.field_size.0 as u16),
+                ratatui::layout::Constraint::Length((app.field_size.0 + 2) as u16),
                 ratatui::layout::Constraint::Min(0),
             ]
             .as_ref(),
