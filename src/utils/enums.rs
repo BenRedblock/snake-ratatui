@@ -22,7 +22,8 @@ pub struct App {
     pub menu_cursor: Option<usize>,
     pub direction: Direction,
     pub snake: Vec<(f64, f64)>,
-    pub speed: u32,
+    pub tick_rate: u32,
     pub blocked: bool,
     pub field_size: (u32, u32),
+    pub tick: bool,
 }

@@ -19,9 +19,10 @@ impl App {
             menu_cursor: Some(0),
             direction: Direction::Up,
             snake: vec![(21.0, 20.0), (22.0, 20.0), (20.0, 20.0)],
-            speed: 4,
+            tick_rate: 4,
             blocked: true,
             field_size: (100, 50),
+            tick: false,
         }
     }
 
@@ -42,7 +43,7 @@ impl App {
                         self.handle_input_events(key_event);
                     }
                     Event::GameTick => {
-                        if counter == self.speed {
+                        if counter == self.tick_rate {
                             counter = 0;
                             self.on_tick();
                         } else {
@@ -166,11 +167,19 @@ impl App {
     }
 
     fn on_tick(&mut self) {
-        if let CurrentScreen::Main = self.current_screen {
-            self.update_snake_position();
-            if self.has_snake_collision() {
-                self.current_screen = CurrentScreen::Lost;
+        match self.current_screen {
+            CurrentScreen::Menu => {
+                self.tick = !self.tick;
             }
+            CurrentScreen::Lost => {}
+            CurrentScreen::Main => self.game_update(),
+        }
+    }
+
+    fn game_update(&mut self) {
+        self.update_snake_position();
+        if self.has_snake_collision() {
+            self.current_screen = CurrentScreen::Lost;
         }
     }
 

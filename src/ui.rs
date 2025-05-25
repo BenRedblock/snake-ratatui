@@ -84,31 +84,48 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(canvas, inner_area);
         }
         CurrentScreen::Menu => {
-            let start_text = Paragraph::new(Text::from("Start Game"))
-                .style(match app.menu_cursor {
-                    Some(0) => Style::default()
-                        .add_modifier(Modifier::BOLD)
-                        .fg(Color::Yellow),
-                    _ => Style::default().fg(Color::Green),
-                })
-                .centered();
-            let quit_text = Paragraph::new(Text::from("Quit"))
-                .style(match app.menu_cursor {
-                    Some(1) => Style::default()
-                        .add_modifier(Modifier::BOLD)
-                        .fg(Color::Yellow),
-                    _ => Style::default().fg(Color::Red),
-                })
-                .centered();
-            let [inner_area] = Layout::horizontal([Constraint::Length(20)])
+            let start_game_text = match app.menu_cursor {
+                Some(0) => {
+                    if app.tick {
+                        Text::from("Start Game")
+                    } else {
+                        Text::from("-> Start Game <-")
+                    }
+                }
+                _ => Text::from("Start Game"),
+            };
+            let quit_game_text = match app.menu_cursor {
+                Some(1) => {
+                    if app.tick {
+                        Text::from("Quit")
+                    } else {
+                        Text::from("-> Quit <-")
+                    }
+                }
+                _ => Text::from("Quit"),
+            };
+            let start_paragraph = Paragraph::new(start_game_text)
+                .style(Style::default().fg(Color::Green))
+                .centered()
+                .block(Block::default().borders(ratatui::widgets::Borders::ALL));
+            let quit_paragraph = Paragraph::new(quit_game_text)
+                .style(Style::default().fg(Color::Red))
+                .centered()
+                .block(Block::default().borders(ratatui::widgets::Borders::ALL));
+            let menu_block = Block::default()
+                .title("Menu")
+                .borders(ratatui::widgets::Borders::ALL)
+                .border_type(BorderType::QuadrantInside);
+            let [button_area] = Layout::horizontal([Constraint::Length(20)])
                 .flex(Flex::Center)
                 .areas(inner_area);
 
             let menu_layout = Layout::vertical([Constraint::Length(3), Constraint::Length(3)])
                 .flex(Flex::Center)
-                .split(inner_area);
-            frame.render_widget(start_text, menu_layout[0]);
-            frame.render_widget(quit_text, menu_layout[1]);
+                .split(button_area);
+            frame.render_widget(menu_block, inner_area);
+            frame.render_widget(start_paragraph, menu_layout[0]);
+            frame.render_widget(quit_paragraph, menu_layout[1]);
         }
         CurrentScreen::Lost => {
             frame.render_widget(canvas, inner_area);
