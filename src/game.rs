@@ -19,11 +19,12 @@ impl App {
             menu_cursor: Some(0),
             direction: Direction::Up,
             snake: vec![(21.0, 20.0), (22.0, 20.0), (20.0, 20.0)],
-            tick_rate: 3,
+            game_speed: 0,
             blocked: true,
             field_size: (50, 25),
             tick: false,
             collectables: vec![],
+            round_time: 0,
         }
     }
 
@@ -44,12 +45,12 @@ impl App {
                         self.handle_input_events(key_event);
                     }
                     Event::GameTick => {
-                        if counter == self.tick_rate {
-                            counter = 0;
-                            self.on_tick();
-                        } else {
-                            counter += 1;
+                        self.on_tick(&mut counter);
+                        if counter == 0 {
+                            counter = 3;
+                            self.tick = !self.tick;
                         }
+                        counter -= 1;
                     }
                 }
             }
@@ -89,10 +90,11 @@ impl App {
             },
             CurrentScreen::Lost => match key_event.code {
                 event::KeyCode::Esc => self.exit = true,
-                _ => {
+                event::KeyCode::Enter => {
                     self.current_screen = CurrentScreen::Menu;
                     self.menu_cursor = Some(0);
                 }
+                _ => {}
             },
             CurrentScreen::Menu => match key_event.code {
                 event::KeyCode::Esc => self.exit = true,
@@ -100,6 +102,21 @@ impl App {
                 _ => self.handle_menu_input(&key_event),
             },
         }
+    }
+
+    fn start_game(&mut self) {
+        self.current_screen = CurrentScreen::Main;
+        self.snake = vec![
+            (23.0, 20.0),
+            (22.0, 20.0),
+            (21.0, 20.0),
+            (20.0, 20.0),
+            (19.0, 20.0),
+        ];
+        self.direction = Direction::Right;
+        self.menu_cursor = None;
+        self.spawn_item();
+        self.round_time = 0;
     }
 
     fn handle_menu_input(&mut self, key_event: &KeyEvent) {
@@ -121,19 +138,7 @@ impl App {
             event::KeyCode::Enter => {
                 if let Some(cursor) = self.menu_cursor {
                     match cursor {
-                        0 => {
-                            self.current_screen = CurrentScreen::Main;
-                            self.snake = vec![
-                                (23.0, 20.0),
-                                (22.0, 20.0),
-                                (21.0, 20.0),
-                                (20.0, 20.0),
-                                (19.0, 20.0),
-                            ];
-                            self.direction = Direction::Right;
-                            self.menu_cursor = None;
-                            self.spawn_item();
-                        }
+                        0 => self.start_game(),
                         1 => self.exit = true,
                         _ => {}
                     }
@@ -168,13 +173,17 @@ impl App {
         }
     }
 
-    fn on_tick(&mut self) {
+    fn on_tick(&mut self, counter: &mut u32) {
         match self.current_screen {
-            CurrentScreen::Menu => {
-                self.tick = !self.tick;
-            }
+            CurrentScreen::Menu => {}
             CurrentScreen::Lost => {}
-            CurrentScreen::Main => self.game_update(),
+            CurrentScreen::Main => {
+                self.round_time += 50;
+                if *counter == 0 || *counter == self.game_speed {
+                    self.game_update();
+                    *counter = 3;
+                }
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 use crate::utils::{
     enums::{CollectableType, CurrentScreen},
-    helpers::vec_to_string,
+    helpers::{convert_ms_to_string, vec_to_string},
 };
 
 use super::utils::enums::App;
@@ -9,23 +9,17 @@ use ratatui::{
     layout::{Constraint, Flex, Layout},
     style::{Color, Modifier, Style},
     symbols::Marker,
-    text::Text,
+    text::{Line, Span, Text},
     widgets::{
-        Block, BorderType, Paragraph,
+        Block, BorderType, Padding, Paragraph,
         canvas::{Canvas, Points},
     },
 };
 pub fn render(frame: &mut Frame, app: &App) {
-    let header_block = Block::default()
-        .title("Snake Game")
-        .borders(ratatui::widgets::Borders::ALL)
-        .style(Style::default());
-
     let vertical_chunks = ratatui::layout::Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints(
             [
-                ratatui::layout::Constraint::Max(4),
                 ratatui::layout::Constraint::Length((app.field_size.1 + 2) as u16),
                 ratatui::layout::Constraint::Min(0),
             ]
@@ -33,35 +27,47 @@ pub fn render(frame: &mut Frame, app: &App) {
         )
         .split(frame.area());
 
-    frame.render_widget(header_block, vertical_chunks[0]);
-
-    let chunks = ratatui::layout::Layout::default()
+    let horizontal_chunks = ratatui::layout::Layout::default()
         .direction(ratatui::layout::Direction::Horizontal)
         .constraints(
             [
-                ratatui::layout::Constraint::Min(0),
+                ratatui::layout::Constraint::Max(30),
                 ratatui::layout::Constraint::Length((app.field_size.0 + 2) as u16),
-                ratatui::layout::Constraint::Min(0),
+                ratatui::layout::Constraint::Max(30),
             ]
             .as_ref(),
         )
-        .split(vertical_chunks[1]);
-    let inner_area = chunks[1];
+        .split(vertical_chunks[0]);
+    let inner_area = horizontal_chunks[1];
 
     let left_block = Block::default()
         .title("Left Bar")
         .borders(ratatui::widgets::Borders::ALL)
         .style(Style::default());
 
+    let mut score_lines = vec![];
+
+    let score_span = Span::from(format!("Score: {}", app.snake.len() - 3));
+    let time_span = Span::from(format!("Time: {}", convert_ms_to_string(&app.round_time)));
+    score_lines.push(Line::from(score_span));
+    score_lines.push(Line::from(time_span));
+
+    let speed_color = match app.game_speed {
+        speed if speed <= 0 => Color::Green,
+        speed if speed <= 1 => Color::Yellow,
+        _ => Color::Red,
+    };
+    let speed_text =
+        Span::from(format!("Speed: {:.2}", app.game_speed)).style(Style::default().fg(speed_color));
+    score_lines.push(Line::from(speed_text));
+
+    let paragraphs = Paragraph::new(score_lines);
+
     let right_block = Block::default()
         .borders(ratatui::widgets::Borders::ALL)
         .style(Style::default());
-
-    let paragraphs = Paragraph::new(Text::from(vec_to_string(&app.snake)))
-        .block(left_block)
-        .style(Style::default().fg(Color::White).bg(Color::Black));
-    frame.render_widget(paragraphs, chunks[0]);
-    frame.render_widget(right_block, chunks[2]);
+    frame.render_widget(paragraphs, horizontal_chunks[0]);
+    frame.render_widget(right_block, horizontal_chunks[2]);
 
     let canvas = Canvas::default()
         .block(
