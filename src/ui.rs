@@ -1,17 +1,17 @@
 use crate::utils::{
     enums::{CollectableType, CurrentScreen},
-    helpers::{convert_ms_to_string, vec_to_string},
+    helpers::convert_ms_to_string,
 };
 
 use super::utils::enums::App;
 use ratatui::{
     Frame,
     layout::{Constraint, Flex, Layout},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     symbols::Marker,
     text::{Line, Span, Text},
     widgets::{
-        Block, BorderType, Clear, Padding, Paragraph,
+        Block, BorderType, Clear, Paragraph,
         canvas::{Canvas, Points},
     },
 };
