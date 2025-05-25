@@ -1,7 +1,7 @@
 # Ratatui Snake Game
 
 ## Todo:
-- [ ] Make input working
+- [x] Make input working
 - [ ] Render Snake
 - [ ] Move Snake
 - [ ] Collision Detection
