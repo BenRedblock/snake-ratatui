@@ -8,7 +8,7 @@ use ratatui::{
     symbols::Marker,
     text::Text,
     widgets::{
-        Block, Paragraph,
+        Block, BorderType, Paragraph,
         canvas::{Canvas, Points},
     },
 };
@@ -63,7 +63,8 @@ pub fn render(frame: &mut Frame, app: &App) {
         .block(
             Block::default()
                 .title("Game Area")
-                .borders(ratatui::widgets::Borders::ALL),
+                .borders(ratatui::widgets::Borders::ALL)
+                .border_type(BorderType::QuadrantInside),
         )
         .x_bounds([0.0, app.field_size.0 as f64])
         .y_bounds([0.0, app.field_size.1 as f64])

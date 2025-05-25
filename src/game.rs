@@ -193,10 +193,10 @@ impl App {
                 return true;
             }
         }
-        if head.0 >= self.field_size.0 as f64
+        if head.0 > self.field_size.0 as f64
             || head.0 <= 0.0
             || head.1 >= self.field_size.1 as f64
-            || head.1 <= 0.0
+            || head.1 < 0.0
         {
             return true;
         }
