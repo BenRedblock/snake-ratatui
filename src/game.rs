@@ -8,7 +8,7 @@ use crate::{
     ui,
     utils::{
         collectables::Collectable,
-        enums::{CurrentScreen, Direction, Event},
+        enums::{CollectableType, CurrentScreen, Direction, Event},
     },
 };
 use crossterm::event::{self, KeyEvent};
@@ -26,6 +26,9 @@ pub struct App {
     pub collectables: Vec<Collectable>,
     pub game_speed: u32,
     pub round_time: u64,
+    pub random_item_timer: u32,
+    pub item_duration: u32,
+    pub active_item: Option<CollectableType>,
 }
 impl App {
     pub fn new() -> Self {
@@ -41,6 +44,9 @@ impl App {
             tick: false,
             collectables: vec![],
             round_time: 0,
+            random_item_timer: 2,
+            item_duration: 0,
+            active_item: None,
         }
     }
 
@@ -132,7 +138,7 @@ impl App {
         self.direction = Direction::Right;
         self.menu_cursor = None;
         self.collectables = vec![];
-        self.spawn_item();
+        self.spawn_item(CollectableType::Apple);
         self.round_time = 0;
     }
 
@@ -204,12 +210,12 @@ impl App {
         }
     }
 
-    fn spawn_item(&mut self) {
+    fn spawn_item(&mut self, collectable_type: CollectableType) {
         let x: f64 = random_range(1..self.field_size.0 - 1) as f64;
         let y: f64 = random_range(1..self.field_size.1 - 1) as f64;
-        let new_collectable = Collectable::new(x, y);
+        let new_collectable = Collectable::new(x, y, collectable_type.clone());
         if self.snake.contains(&new_collectable.get_position()) {
-            self.spawn_item();
+            self.spawn_item(collectable_type);
         } else {
             self.collectables.push(new_collectable);
         }
@@ -219,6 +225,23 @@ impl App {
         let remove_tail = !self.check_snake_collectable_collision();
         self.update_snake_position(remove_tail);
 
+        // Spawn Item
+        if self.random_item_timer == 0 {
+            if self.active_item.is_none() {
+                self.spawn_item(CollectableType::Speed);
+            }
+            self.random_item_timer = rand::random_range(50..200);
+        } else {
+            self.random_item_timer -= 1;
+        }
+
+        // Items
+        if self.item_duration > 0 {
+            self.item_duration -= 1;
+        } else {
+            self.active_item = None;
+        }
+
         if self.has_snake_collision() {
             self.current_screen = CurrentScreen::Lost;
         }
@@ -227,8 +250,18 @@ impl App {
     fn check_snake_collectable_collision(&mut self) -> bool {
         for i in 0..self.collectables.len() {
             if self.snake[0] == self.collectables[i].get_position() {
+                if let CollectableType::Speed = self.collectables[i].collectable_type {}
+                match self.collectables[i].collectable_type {
+                    CollectableType::Speed => {
+                        self.game_speed = 1;
+                        self.item_duration = 20;
+                        self.active_item = Some(CollectableType::Speed);
+                    }
+                    CollectableType::Apple => {
+                        self.spawn_item(CollectableType::Apple);
+                    }
+                }
                 self.collectables.remove(i);
-                self.spawn_item();
                 return true;
             }
         }

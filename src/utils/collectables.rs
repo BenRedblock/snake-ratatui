@@ -5,10 +5,10 @@ pub struct Collectable {
     pub collectable_type: CollectableType,
 }
 impl Collectable {
-    pub fn new(x: f64, y: f64) -> Self {
+    pub fn new(x: f64, y: f64, collectable_type: CollectableType) -> Self {
         Collectable {
             position: (x, y),
-            collectable_type: CollectableType::Apple,
+            collectable_type: collectable_type,
         }
     }
 

@@ -15,7 +15,8 @@ pub enum Event {
     Input(crossterm::event::KeyEvent),
     GameTick,
 }
-
+#[derive(Clone)]
 pub enum CollectableType {
     Apple,
+    Speed,
 }

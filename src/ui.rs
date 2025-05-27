@@ -67,6 +67,7 @@ pub fn render(frame: &mut Frame, app: &App) {
                     coords: &[collectable.get_position()],
                     color: match collectable.collectable_type {
                         CollectableType::Apple => Color::Red,
+                        CollectableType::Speed => Color::Yellow,
                     },
                 });
             }
