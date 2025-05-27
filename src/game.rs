@@ -115,6 +115,7 @@ impl App {
         ];
         self.direction = Direction::Right;
         self.menu_cursor = None;
+        self.collectables = vec![];
         self.spawn_item();
         self.round_time = 0;
     }
