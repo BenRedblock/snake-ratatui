@@ -1,6 +1,6 @@
 use std::io;
 
-use utils::enums::App;
+use game::App;
 
 mod game;
 mod ui;

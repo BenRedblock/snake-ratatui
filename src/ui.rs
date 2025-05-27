@@ -1,9 +1,11 @@
-use crate::utils::{
-    enums::{CollectableType, CurrentScreen},
-    helpers::convert_ms_to_string,
+use crate::{
+    game::App,
+    utils::{
+        enums::{CollectableType, CurrentScreen},
+        helpers::convert_ms_to_string,
+    },
 };
 
-use super::utils::enums::App;
 use ratatui::{
     Frame,
     layout::{Constraint, Flex, Layout},
