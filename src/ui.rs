@@ -1,10 +1,6 @@
 use crate::{
     game::App,
-    utils::{
-        collectables::Collectable,
-        enums::{CollectableType, CurrentScreen},
-        helpers::convert_ms_to_string,
-    },
+    utils::{collectables::AnyCollectable, enums::CurrentScreen, helpers::convert_ms_to_string},
 };
 
 use ratatui::{
@@ -69,9 +65,10 @@ pub fn render(frame: &mut Frame, app: &App) {
                 }
                 ctx.draw(&Points {
                     coords: &[collectable.get_position()],
-                    color: match collectable.get_type() {
-                        CollectableType::Apple => Color::Red,
-                        CollectableType::Speed => Color::Yellow,
+                    color: match collectable {
+                        AnyCollectable::Apple(_) => Color::Red,
+                        AnyCollectable::Speed(_) => Color::Yellow,
+                        AnyCollectable::Reverse(_) => Color::Blue,
                     },
                 });
             }

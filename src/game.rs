@@ -1,5 +1,4 @@
 use std::{
-    iter::Filter,
     sync::mpsc::{self, Sender},
     thread,
     time::Duration,
@@ -8,8 +7,8 @@ use std::{
 use crate::{
     ui,
     utils::{
-        collectables::{AnyCollectable, AppleCollectable, Collectable},
-        enums::{CollectableType, CurrentScreen, Direction, Event},
+        collectables::{AnyCollectable, CollectableType},
+        enums::{CurrentScreen, Direction, Event},
     },
 };
 use crossterm::event::{self, KeyEvent};
@@ -19,7 +18,7 @@ pub struct App {
     pub exit: bool,
     pub current_screen: CurrentScreen,
     pub menu_cursor: Option<usize>,
-    direction: Direction,
+    pub direction: Direction,
     pub snake: Vec<(f64, f64)>,
     blocked: bool,
     pub field_size: (u32, u32),
@@ -43,7 +42,7 @@ impl App {
             tick: false,
             collectables: vec![],
             round_time: 0,
-            random_item_timer: 2,
+            random_item_timer: 50,
         }
     }
 
@@ -135,6 +134,7 @@ impl App {
         self.direction = Direction::Right;
         self.menu_cursor = None;
         self.collectables = vec![];
+        self.game_speed = 0;
         self.spawn_item(CollectableType::Apple);
         self.round_time = 0;
     }
@@ -225,15 +225,15 @@ impl App {
         // Spawn Item
         if self.random_item_timer == 0 {
             let items = self.collectables.iter().filter(|ele| {
-                if let CollectableType::Apple = ele.get_type() {
+                if let AnyCollectable::Apple(_) = ele {
                     return false;
                 }
-                false
+                true
             });
             if items.count() <= 0 {
-                self.spawn_item(CollectableType::Speed);
+                self.spawn_item(CollectableType::from_random());
             }
-            self.random_item_timer = rand::random_range(200..500);
+            self.random_item_timer = rand::random_range(100..300);
         } else {
             self.random_item_timer -= 1;
         }
