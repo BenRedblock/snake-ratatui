@@ -1,6 +1,7 @@
 use crate::{
     game::App,
     utils::{
+        collectables::Collectable,
         enums::{CollectableType, CurrentScreen},
         helpers::convert_ms_to_string,
     },
@@ -65,7 +66,7 @@ pub fn render(frame: &mut Frame, app: &App) {
             for collectable in &app.collectables {
                 ctx.draw(&Points {
                     coords: &[collectable.get_position()],
-                    color: match collectable.collectable_type {
+                    color: match collectable.get_type() {
                         CollectableType::Apple => Color::Red,
                         CollectableType::Speed => Color::Yellow,
                     },
