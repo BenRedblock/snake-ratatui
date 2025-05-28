@@ -1,9 +1,8 @@
-use crate::utils::{
-    enums::{CollectableType, CurrentScreen},
-    helpers::convert_ms_to_string,
+use crate::{
+    game::App,
+    utils::{collectables::AnyCollectable, enums::CurrentScreen, helpers::convert_ms_to_string},
 };
 
-use super::utils::enums::App;
 use ratatui::{
     Frame,
     layout::{Constraint, Flex, Layout},
@@ -61,10 +60,15 @@ pub fn render(frame: &mut Frame, app: &App) {
         .marker(Marker::HalfBlock)
         .paint(|ctx| {
             for collectable in &app.collectables {
+                if !collectable.is_visible() {
+                    continue;
+                }
                 ctx.draw(&Points {
                     coords: &[collectable.get_position()],
-                    color: match collectable.collectable_type {
-                        CollectableType::Apple => Color::Red,
+                    color: match collectable {
+                        AnyCollectable::Apple(_) => Color::Red,
+                        AnyCollectable::Speed(_) => Color::Yellow,
+                        AnyCollectable::Reverse(_) => Color::Blue,
                     },
                 });
             }
