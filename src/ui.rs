@@ -64,6 +64,9 @@ pub fn render(frame: &mut Frame, app: &App) {
         .marker(Marker::HalfBlock)
         .paint(|ctx| {
             for collectable in &app.collectables {
+                if !collectable.is_visible() {
+                    continue;
+                }
                 ctx.draw(&Points {
                     coords: &[collectable.get_position()],
                     color: match collectable.get_type() {

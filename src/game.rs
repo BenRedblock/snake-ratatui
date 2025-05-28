@@ -16,7 +16,7 @@ use crossterm::event::{self, KeyEvent};
 use rand::random_range;
 
 pub struct App {
-    exit: bool,
+    pub exit: bool,
     pub current_screen: CurrentScreen,
     pub menu_cursor: Option<usize>,
     direction: Direction,
@@ -210,12 +210,11 @@ impl App {
     pub fn spawn_item(&mut self, collectable_type: CollectableType) {
         let x: f64 = random_range(1..self.field_size.0 - 1) as f64;
         let y: f64 = random_range(1..self.field_size.1 - 1) as f64;
-        let new_collectable = AppleCollectable::new(x, y, collectable_type.clone());
+        let new_collectable = AnyCollectable::new(x, y, collectable_type.clone());
         if self.snake.contains(&new_collectable.get_position()) {
             self.spawn_item(collectable_type);
         } else {
-            self.collectables
-                .push(AnyCollectable::Apple(new_collectable));
+            self.collectables.push(new_collectable);
         }
     }
 
@@ -234,7 +233,7 @@ impl App {
             if items.count() <= 0 {
                 self.spawn_item(CollectableType::Speed);
             }
-            self.random_item_timer = rand::random_range(50..200);
+            self.random_item_timer = rand::random_range(200..500);
         } else {
             self.random_item_timer -= 1;
         }

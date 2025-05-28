@@ -51,7 +51,7 @@ impl Collectable for SpeedCollectable {
     fn new(x: f64, y: f64, collectable_type: CollectableType) -> Self {
         SpeedCollectable {
             position: (x, y),
-            active_time: rand::random_range(10..50),
+            active_time: rand::random_range(50..200),
             active: false,
             collectable_type,
         }
