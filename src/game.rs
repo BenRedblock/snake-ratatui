@@ -9,6 +9,7 @@ use crate::{
     utils::{
         collectables::{AnyCollectable, CollectableType},
         enums::{CurrentScreen, Direction, Event},
+        scores::{Score, ScoreManager},
     },
 };
 use crossterm::event::{self, KeyEvent};
@@ -27,6 +28,7 @@ pub struct App {
     pub game_speed: u32,
     pub round_time: u64,
     pub random_item_timer: u32,
+    score_manager: ScoreManager,
 }
 impl App {
     pub fn new() -> Self {
@@ -43,7 +45,16 @@ impl App {
             collectables: vec![],
             round_time: 0,
             random_item_timer: 50,
+            score_manager: ScoreManager::new(),
         }
+    }
+
+    pub fn get_score(&self) -> i32 {
+        return self.snake.len() as i32 - 5;
+    }
+
+    pub fn get_highscores(&self) -> &Vec<Score> {
+        return self.score_manager.get_scores();
     }
 
     pub fn run(&mut self) -> Result<(), std::io::Error> {
@@ -241,6 +252,8 @@ impl App {
         // Items
         if self.has_snake_collision() {
             self.current_screen = CurrentScreen::Lost;
+            self.score_manager
+                .add_score(String::from("you"), self.get_score());
         }
     }
 

@@ -5,12 +5,12 @@ use crate::{
 
 use ratatui::{
     Frame,
-    layout::{Constraint, Flex, Layout},
+    layout::{Constraint, Flex, Layout, Margin},
     style::{Color, Style},
     symbols::Marker,
     text::{Line, Span, Text},
     widgets::{
-        Block, BorderType, Clear, Paragraph,
+        Block, BorderType, Clear, Paragraph, Scrollbar, ScrollbarState,
         canvas::{Canvas, Points},
     },
 };
@@ -81,10 +81,37 @@ pub fn render(frame: &mut Frame, app: &App) {
                 color: Color::Green,
             });
         });
+    // Highscpre display
+    //
+    let vertical_scroll = 0;
+    let scrollbar = Scrollbar::default();
+    let mut scores: Vec<Line> = app
+        .get_highscores()
+        .iter()
+        .enumerate()
+        .map(|(i, s)| {
+            return Line::from(format!("# {}: {} - {}", i + 1, s.player_name, s.score));
+        })
+        .collect();
+    scores.insert(0, Line::from("Highscores:"));
+    let highscore_paragraph = Paragraph::new(scores.clone())
+        .scroll((vertical_scroll as u16, 0))
+        .block(right_block);
 
+    let mut scrollbar_state = ScrollbarState::new(scores.len()).position(vertical_scroll);
+    frame.render_widget(highscore_paragraph, horizontal_chunks[2]);
+    frame.render_stateful_widget(
+        scrollbar,
+        horizontal_chunks[2].inner(Margin {
+            // using an inner vertical margin of 1 unit makes the scrollbar inside the block
+            vertical: 1,
+            horizontal: 0,
+        }),
+        &mut scrollbar_state,
+    );
     // Score and time display
     let mut score_lines = vec![];
-    let score_span = Span::from(format!("Score: {}", app.snake.len() as i32 - 5));
+    let score_span = Span::from(format!("Score: {}", app.get_score()));
     let time_span = Span::from(format!("Time: {}", convert_ms_to_string(&app.round_time)));
     score_lines.push(Line::from(score_span));
     score_lines.push(Line::from(time_span));
@@ -103,7 +130,6 @@ pub fn render(frame: &mut Frame, app: &App) {
 
             let paragraphs = Paragraph::new(score_lines).block(left_block.title("Game Info"));
             frame.render_widget(paragraphs, horizontal_chunks[0]);
-            frame.render_widget(right_block, horizontal_chunks[2]);
         }
         CurrentScreen::Menu => {
             let start_game_text = match app.menu_cursor {
@@ -150,7 +176,6 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(quit_paragraph, menu_layout[1]);
             // Left and right blocks
             frame.render_widget(left_block, horizontal_chunks[0]);
-            frame.render_widget(right_block, horizontal_chunks[2]);
         }
         CurrentScreen::Lost => {
             frame.render_widget(canvas, inner_area);
@@ -179,7 +204,6 @@ pub fn render(frame: &mut Frame, app: &App) {
             // Left and right blocks
             let paragraphs = Paragraph::new(score_lines).block(left_block.title("Game Info"));
             frame.render_widget(paragraphs, horizontal_chunks[0]);
-            frame.render_widget(right_block, horizontal_chunks[2]);
         }
     }
 }
