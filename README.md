@@ -46,8 +46,9 @@ or
 
 ### Future plans:
 
-- [ ] Add High Score
+- [x] Add High Score
 - [ ] Add Multiplayer Mode
 - [ ] Improve UI/UX
 - [ ] Add Sound Effects
-- [ ] Add Leaderboard
+- [x] Add Leaderboard
+- [ ] Add online Leaderboard
