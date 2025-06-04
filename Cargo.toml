@@ -15,3 +15,8 @@ serde_json = "1.0"
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+[workspace.metadata.dist]
+
+# Ignore out-of-date contents
+allow-dirty = ["ci"]
