@@ -10,7 +10,7 @@ use ratatui::{
     symbols::Marker,
     text::{Line, Span, Text},
     widgets::{
-        Block, BorderType, Clear, Paragraph, Scrollbar, ScrollbarState,
+        Block, BorderType, Borders, Clear, Paragraph, Scrollbar, ScrollbarState,
         canvas::{Canvas, Points},
     },
 };
@@ -46,6 +46,34 @@ pub fn render(frame: &mut Frame, app: &App) {
     let left_block = Block::default()
         .borders(ratatui::widgets::Borders::ALL)
         .style(Style::default());
+
+    if frame.area().height < 27 || frame.area().width < 100 {
+        let increase_size_paragraph = Paragraph::new(Line::from("min 100 x 27").centered()).block(
+            Block::default()
+                .style(Style::new().fg(Color::Red))
+                .title(Line::from("The screen is to small"))
+                .borders(Borders::ALL),
+        );
+        let block = Layout::default()
+            .direction(ratatui::layout::Direction::Horizontal)
+            .constraints([
+                ratatui::layout::Constraint::Fill(1),
+                ratatui::layout::Constraint::Max(30),
+                ratatui::layout::Constraint::Fill(1),
+            ])
+            .split(
+                Layout::default()
+                    .direction(ratatui::layout::Direction::Vertical)
+                    .constraints([
+                        ratatui::layout::Constraint::Fill(1),
+                        ratatui::layout::Constraint::Max(3),
+                        ratatui::layout::Constraint::Fill(1),
+                    ])
+                    .split(frame.area())[1],
+            )[1];
+        frame.render_widget(increase_size_paragraph, block);
+        return;
+    }
 
     // Game area canvas
     let canvas = Canvas::default()
