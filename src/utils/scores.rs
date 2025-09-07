@@ -1,6 +1,7 @@
-use std::fs::File;
-use std::fs::read_to_string;
+use std::env;
+use std::fs::{File, create_dir_all, read_to_string};
 use std::io::Write;
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
@@ -34,14 +35,15 @@ impl ScoreManager {
 
     fn save_scores(&mut self) {
         let json_data = serde_json::to_string(&self.scores).expect("Failed to serialize");
-        // Write the data into the encoder
-        let mut file = File::create("scores.json").expect("Failed to create file");
+        let path = Self::get_save_file_path();
+        let mut file = File::create(&path).expect(&format!("Failed to create file at {}", path));
         file.write_all(json_data.as_bytes())
             .expect("Failed to write JSON to file");
     }
 
     fn load_scores(&mut self) {
-        let result = match read_to_string("scores.json") {
+        let path = Self::get_save_file_path();
+        let result = match read_to_string(&path) {
             Ok(raw_string) => serde_json::from_str(&raw_string).unwrap_or(Vec::new()),
             Err(_err) => Vec::new(),
         };
@@ -49,11 +51,34 @@ impl ScoreManager {
     }
 
     fn sort_scores(&mut self) {
-        self.scores
-            .sort_by(|a, b| (b.score - a.score).cmp(&b.score));
+        self.scores.sort_by(|a, b| b.score.cmp(&a.score));
     }
 
     pub fn get_scores(&self) -> &Vec<Score> {
         return &self.scores;
+    }
+
+    fn get_save_file_path() -> String {
+        let mut path_buf = if cfg!(target_os = "windows") {
+            let appdata = env::var("APPDATA").expect("APPDATA environment variable not found");
+            PathBuf::from(appdata)
+        } else {
+            let home = env::var("HOME").expect("HOME environment variable not found");
+            PathBuf::from(home)
+        };
+
+        if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
+            path_buf.push(".local/share");
+        }
+
+        path_buf.push("snake-ratatui");
+
+        if !path_buf.exists() {
+            create_dir_all(&path_buf).expect("Failed to create score directory");
+        }
+
+        path_buf.push("scores.json");
+
+        path_buf.to_str().unwrap().to_string()
     }
 }
