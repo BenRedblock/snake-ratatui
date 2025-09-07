@@ -3,7 +3,6 @@ use crate::{
     utils::helpers::{get_direction_from_vector, get_directionvector_from_snake},
 };
 
-use super::enums::Direction;
 #[derive(Clone)]
 pub enum CollectableType {
     Apple,
