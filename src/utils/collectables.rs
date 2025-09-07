@@ -1,4 +1,7 @@
-use crate::game::App;
+use crate::{
+    game::App,
+    utils::helpers::{get_direction_from_vector, get_directionvector_from_snake},
+};
 
 use super::enums::Direction;
 #[derive(Clone)]
@@ -103,12 +106,8 @@ impl Collectable for ReverseCollectable {
     }
     fn on_collect(&mut self, app: &mut App) -> bool {
         app.snake.reverse();
-        match app.direction {
-            Direction::Up => app.direction = Direction::Down,
-            Direction::Down => app.direction = Direction::Up,
-            Direction::Left => app.direction = Direction::Right,
-            Direction::Right => app.direction = Direction::Left,
-        }
+        let vector: (f64, f64) = get_directionvector_from_snake(&app.snake);
+        app.direction = get_direction_from_vector(&vector);
         true
     }
 }
