@@ -50,16 +50,20 @@ impl Collectable for AppleCollectable {
 
 pub struct SpeedCollectable {
     position: (f64, f64),
-    active_time: u32,
-    active: bool,
+    remaining_time: Option<u32>,
+}
+
+impl SpeedCollectable {
+    pub fn get_remaining_time(&self) -> Option<u32> {
+        self.remaining_time
+    }
 }
 
 impl Collectable for SpeedCollectable {
     fn new(x: f64, y: f64) -> Self {
         SpeedCollectable {
             position: (x, y),
-            active_time: rand::random_range(50..200),
-            active: false,
+            remaining_time: None
         }
     }
 
@@ -68,11 +72,12 @@ impl Collectable for SpeedCollectable {
     }
 
     fn on_game_update(&mut self, app: &mut App) -> bool {
-        if self.active {
-            self.active_time -= 1;
-            if self.active_time <= 0 {
-                app.game_speed = 0;
-                self.active = false;
+        if let Some(remaining_time) = self.remaining_time {
+            if remaining_time > 0 {
+                self.remaining_time = Some(remaining_time - 1);
+                return false;
+            } else {
+                app.game_speed -= 1;
                 return true;
             }
         }
@@ -81,12 +86,12 @@ impl Collectable for SpeedCollectable {
 
     fn on_collect(&mut self, app: &mut App) -> bool {
         app.game_speed = 1;
-        self.active = true;
+        self.remaining_time = Some(rand::random_range(50..200));
         false
     }
 
     fn is_visible(&self) -> bool {
-        !self.active
+        self.remaining_time.is_none()
     }
 }
 

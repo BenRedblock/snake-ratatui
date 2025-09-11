@@ -54,7 +54,7 @@ pub fn render(frame: &mut Frame, app: &App) {
                 .title(Line::from("The screen is to small"))
                 .borders(Borders::ALL),
         );
-        let block = Layout::default()
+        let increase_size_block = Layout::default()
             .direction(ratatui::layout::Direction::Horizontal)
             .constraints([
                 ratatui::layout::Constraint::Fill(1),
@@ -71,7 +71,7 @@ pub fn render(frame: &mut Frame, app: &App) {
                     ])
                     .split(frame.area())[1],
             )[1];
-        frame.render_widget(increase_size_paragraph, block);
+        frame.render_widget(increase_size_paragraph, increase_size_block);
         return;
     }
 
@@ -151,13 +151,36 @@ pub fn render(frame: &mut Frame, app: &App) {
     let speed_text =
         Span::from(format!("Speed: {:.2}", app.game_speed)).style(Style::default().fg(speed_color));
     score_lines.push(Line::from(speed_text));
+    let left_vertical_chunks = Layout::default()
+        .constraints([
+            ratatui::layout::Constraint::Percentage(30),
+            ratatui::layout::Constraint::Percentage(70),
+        ])
+        .split(horizontal_chunks[0]);
+
+    // item Info section
+    let invisible_collectables = app.collectables.iter().filter(|collectable| {
+        return !collectable.is_visible();
+    });
+    let mut collectable_lines = vec![];
+    for collectable in invisible_collectables {
+        let collectable_text = match collectable {
+            AnyCollectable::Apple(_apple) => String::from("Apple"),
+            AnyCollectable::Speed(speed) => String::from(format!("Speed: {}", speed.get_remaining_time().unwrap_or(0))),
+            AnyCollectable::Reverse(_reverse) => String::from("Reverse"),
+        };
+        collectable_lines.push(Line::from(collectable_text));
+    }
 
     match app.current_screen {
         CurrentScreen::Main => {
             frame.render_widget(canvas, inner_area);
 
-            let paragraphs = Paragraph::new(score_lines).block(left_block.title("Game Info"));
-            frame.render_widget(paragraphs, horizontal_chunks[0]);
+            let score_paragraph = Paragraph::new(score_lines).block(left_block.clone().title("Game Info"));
+            frame.render_widget(score_paragraph, left_vertical_chunks[0]);
+
+            let collectable_paragraph = Paragraph::new(collectable_lines).block(left_block.title("Collectables"));
+            frame.render_widget(collectable_paragraph, left_vertical_chunks[1]);
         }
         CurrentScreen::Menu => {
             let start_game_text = match app.menu_cursor {
@@ -229,9 +252,13 @@ pub fn render(frame: &mut Frame, app: &App) {
             .block(lost_block);
             frame.render_widget(Clear::default(), inner_area);
             frame.render_widget(lost_text, inner_area);
-            // Left and right blocks
-            let paragraphs = Paragraph::new(score_lines).block(left_block.title("Game Info"));
-            frame.render_widget(paragraphs, horizontal_chunks[0]);
+            // Left block
+
+            let score_paragraph = Paragraph::new(score_lines).block(left_block.clone().title("Game Info"));
+            frame.render_widget(score_paragraph, left_vertical_chunks[0]);
+
+            let collectable_paragraph = Paragraph::new(collectable_lines).block(left_block.title("Collectalbes"));
+            frame.render_widget(collectable_paragraph, left_vertical_chunks[1]);
         }
     }
 }
