@@ -11,7 +11,7 @@ pub enum CollectableType {
 }
 
 impl CollectableType {
-    pub fn from_random() -> Self {
+    pub fn from_random_special() -> Self {
         if rand::random::<bool>() {
             CollectableType::Reverse
         } else {
@@ -27,6 +27,7 @@ pub trait Collectable {
         return false;
     }
     fn on_collect(&mut self, app: &mut App) -> bool;
+    fn on_second_update(&mut self) {}
     fn is_visible(&self) -> bool {
         return true;
     }
@@ -65,7 +66,7 @@ impl Collectable for SpeedCollectable {
     fn new(x: f64, y: f64) -> Self {
         SpeedCollectable {
             position: (x, y),
-            remaining_time: None
+            remaining_time: None,
         }
     }
 
@@ -76,7 +77,6 @@ impl Collectable for SpeedCollectable {
     fn on_game_update(&mut self, app: &mut App) -> bool {
         if let Some(remaining_time) = self.remaining_time {
             if remaining_time > 0 {
-                self.remaining_time = Some(remaining_time - 1);
                 return false;
             } else {
                 app.game_speed -= 1;
@@ -87,9 +87,17 @@ impl Collectable for SpeedCollectable {
     }
 
     fn on_collect(&mut self, app: &mut App) -> bool {
-        app.game_speed = 1;
-        self.remaining_time = Some(rand::random_range(50..200));
+        app.game_speed += 1;
+        self.remaining_time = Some(rand::random_range(10..20));
         false
+    }
+
+    fn on_second_update(&mut self) {
+        if let Some(remaining_time) = self.remaining_time {
+            if remaining_time > 0 {
+                self.remaining_time = Some(remaining_time - 1);
+            }
+        }
     }
 
     fn is_visible(&self) -> bool {
@@ -139,6 +147,9 @@ impl AnyCollectable {
         }
     }
 
+    /// Should be called on every game update
+    ///
+    /// Returns true if the item should be removed from the game
     pub fn on_game_update(&mut self, app: &mut App) -> bool {
         match self {
             AnyCollectable::Apple(a) => a.on_game_update(app),
@@ -147,6 +158,18 @@ impl AnyCollectable {
         }
     }
 
+    /// Should be called every second
+    pub fn on_second_update(&mut self) {
+        match self {
+            AnyCollectable::Apple(a) => a.on_second_update(),
+            AnyCollectable::Speed(s) => s.on_second_update(),
+            AnyCollectable::Reverse(r) => r.on_second_update(),
+        }
+    }
+
+    /// Should be called when the player collects the item
+    ///
+    /// Returns true if the item should be removed from the game
     pub fn on_collect(&mut self, app: &mut App) -> bool {
         match self {
             AnyCollectable::Apple(a) => a.on_collect(app),

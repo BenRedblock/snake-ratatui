@@ -1,6 +1,8 @@
 use crate::{
     game::App,
-    utils::{collectables::AnyCollectable, enums::CurrentScreen, helpers::convert_ms_to_string},
+    utils::{
+        collectables::AnyCollectable, enums::CurrentScreen, helpers::convert_seconds_to_string,
+    },
 };
 
 use ratatui::{
@@ -140,7 +142,10 @@ pub fn render(frame: &mut Frame, app: &App) {
     // Score and time display
     let mut score_lines = vec![];
     let score_span = Span::from(format!("Score: {}", app.get_score()));
-    let time_span = Span::from(format!("Time: {}", convert_ms_to_string(&app.round_time)));
+    let time_span = Span::from(format!(
+        "Time: {}",
+        convert_seconds_to_string(&app.round_time)
+    ));
     score_lines.push(Line::from(score_span));
     score_lines.push(Line::from(time_span));
     let speed_color = match app.game_speed {
@@ -166,7 +171,10 @@ pub fn render(frame: &mut Frame, app: &App) {
     for collectable in invisible_collectables {
         let collectable_text = match collectable {
             AnyCollectable::Apple(_apple) => String::from("Apple"),
-            AnyCollectable::Speed(speed) => String::from(format!("Speed: {}", speed.get_remaining_time().unwrap_or(0))),
+            AnyCollectable::Speed(speed) => String::from(format!(
+                "Speed: {} seconds",
+                speed.get_remaining_time().unwrap_or(0)
+            )),
             AnyCollectable::Reverse(_reverse) => String::from("Reverse"),
         };
         collectable_lines.push(Line::from(collectable_text));
@@ -176,10 +184,12 @@ pub fn render(frame: &mut Frame, app: &App) {
         CurrentScreen::Main => {
             frame.render_widget(canvas, inner_area);
 
-            let score_paragraph = Paragraph::new(score_lines).block(left_block.clone().title("Game Info"));
+            let score_paragraph =
+                Paragraph::new(score_lines).block(left_block.clone().title("Game Info"));
             frame.render_widget(score_paragraph, left_vertical_chunks[0]);
-
-            let collectable_paragraph = Paragraph::new(collectable_lines).block(left_block.title("Collectables"));
+            let collectable_paragraph = Paragraph::new(collectable_lines).block(left_block.title(
+                format!("Collectables - next in {} seconds", app.random_item_timer),
+            ));
             frame.render_widget(collectable_paragraph, left_vertical_chunks[1]);
         }
         CurrentScreen::Menu => {
@@ -254,10 +264,12 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(lost_text, inner_area);
             // Left block
 
-            let score_paragraph = Paragraph::new(score_lines).block(left_block.clone().title("Game Info"));
+            let score_paragraph =
+                Paragraph::new(score_lines).block(left_block.clone().title("Game Info"));
             frame.render_widget(score_paragraph, left_vertical_chunks[0]);
 
-            let collectable_paragraph = Paragraph::new(collectable_lines).block(left_block.title("Collectalbes"));
+            let collectable_paragraph =
+                Paragraph::new(collectable_lines).block(left_block.title("Collectables"));
             frame.render_widget(collectable_paragraph, left_vertical_chunks[1]);
         }
     }

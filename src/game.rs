@@ -44,7 +44,7 @@ impl App {
             tick: false,
             collectables: vec![],
             round_time: 0,
-            random_item_timer: 50,
+            random_item_timer: 5,
             score_manager: ScoreManager::new(),
         }
     }
@@ -63,6 +63,7 @@ impl App {
         let (event_tx, event_rx) = mpsc::channel::<Event>();
 
         self.create_threads(event_tx);
+        let mut ms = 0;
         let mut counter = 3;
         while !self.exit {
             let _ = terminal.draw(|frame| {
@@ -74,11 +75,16 @@ impl App {
                         self.handle_input_events(key_event);
                     }
                     Event::GameTick => {
+                        ms += 50;
                         counter -= 1;
                         self.on_tick(&mut counter);
                         if counter == 0 {
                             counter = 3;
                             self.tick = !self.tick;
+                        }
+                        if ms >= 1000 {
+                            self.on_second_update();
+                            ms = 0;
                         }
                     }
                 }
@@ -209,12 +215,30 @@ impl App {
             CurrentScreen::Menu => {}
             CurrentScreen::Lost => {}
             CurrentScreen::Main => {
-                self.round_time += 50;
                 if *counter == self.game_speed || *counter == 0 {
                     self.game_update();
                     *counter = 3;
                 }
             }
+        }
+    }
+    fn on_second_update(&mut self) {
+        match self.current_screen {
+            CurrentScreen::Main => {
+                // Spawn Item
+                if self.random_item_timer <= 0 {
+                    self.spawn_item(CollectableType::from_random_special());
+                    self.random_item_timer = rand::random_range(10..20);
+                } else {
+                    self.random_item_timer -= 1;
+                }
+
+                self.round_time += 1;
+                for collectable in &mut self.collectables {
+                    collectable.on_second_update();
+                }
+            }
+            _ => {}
         }
     }
 
@@ -232,22 +256,6 @@ impl App {
     fn game_update(&mut self) {
         self.check_collectable_collision();
         self.update_snake_position();
-
-        // Spawn Item
-        if self.random_item_timer == 0 {
-            let items = self.collectables.iter().filter(|ele| {
-                if let AnyCollectable::Apple(_) = ele {
-                    return false;
-                }
-                true
-            });
-            if items.count() <= 0 {
-                self.spawn_item(CollectableType::from_random());
-            }
-            self.random_item_timer = rand::random_range(100..300);
-        } else {
-            self.random_item_timer -= 1;
-        }
 
         // Items
         if self.has_snake_collision() {
