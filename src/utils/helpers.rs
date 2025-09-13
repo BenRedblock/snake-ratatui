@@ -1,7 +1,7 @@
 use crate::utils::enums::Direction;
 
-pub fn convert_ms_to_string(ms: &u64) -> String {
-    let seconds = ms / 1000;
+/// Converts seconds to a string in the format "MM:SS"
+pub fn convert_seconds_to_string(seconds: &u64) -> String {
     let minutes = seconds / 60;
     let remaining_seconds = seconds % 60;
     format!("{:02}:{:02}", minutes, remaining_seconds)

@@ -11,7 +11,7 @@ pub enum CollectableType {
 }
 
 impl CollectableType {
-    pub fn from_random() -> Self {
+    pub fn from_random_special() -> Self {
         if rand::random::<bool>() {
             CollectableType::Reverse
         } else {
@@ -27,6 +27,7 @@ pub trait Collectable {
         return false;
     }
     fn on_collect(&mut self, app: &mut App) -> bool;
+    fn on_second_update(&mut self) {}
     fn is_visible(&self) -> bool {
         return true;
     }
@@ -52,16 +53,20 @@ impl Collectable for AppleCollectable {
 
 pub struct SpeedCollectable {
     position: (f64, f64),
-    active_time: u32,
-    active: bool,
+    remaining_time: Option<u32>,
+}
+
+impl SpeedCollectable {
+    pub fn get_remaining_time(&self) -> Option<u32> {
+        self.remaining_time
+    }
 }
 
 impl Collectable for SpeedCollectable {
     fn new(x: f64, y: f64) -> Self {
         SpeedCollectable {
             position: (x, y),
-            active_time: rand::random_range(50..200),
-            active: false,
+            remaining_time: None,
         }
     }
 
@@ -70,11 +75,11 @@ impl Collectable for SpeedCollectable {
     }
 
     fn on_game_update(&mut self, app: &mut App) -> bool {
-        if self.active {
-            self.active_time -= 1;
-            if self.active_time <= 0 {
-                app.game_speed = 0;
-                self.active = false;
+        if let Some(remaining_time) = self.remaining_time {
+            if remaining_time > 0 {
+                return false;
+            } else {
+                app.game_speed -= 1;
                 return true;
             }
         }
@@ -82,13 +87,21 @@ impl Collectable for SpeedCollectable {
     }
 
     fn on_collect(&mut self, app: &mut App) -> bool {
-        app.game_speed = 1;
-        self.active = true;
+        app.game_speed += 1;
+        self.remaining_time = Some(rand::random_range(10..20));
         false
     }
 
+    fn on_second_update(&mut self) {
+        if let Some(remaining_time) = self.remaining_time {
+            if remaining_time > 0 {
+                self.remaining_time = Some(remaining_time - 1);
+            }
+        }
+    }
+
     fn is_visible(&self) -> bool {
-        !self.active
+        self.remaining_time.is_none()
     }
 }
 
@@ -134,6 +147,9 @@ impl AnyCollectable {
         }
     }
 
+    /// Should be called on every game update
+    ///
+    /// Returns true if the item should be removed from the game
     pub fn on_game_update(&mut self, app: &mut App) -> bool {
         match self {
             AnyCollectable::Apple(a) => a.on_game_update(app),
@@ -142,6 +158,18 @@ impl AnyCollectable {
         }
     }
 
+    /// Should be called every second
+    pub fn on_second_update(&mut self) {
+        match self {
+            AnyCollectable::Apple(a) => a.on_second_update(),
+            AnyCollectable::Speed(s) => s.on_second_update(),
+            AnyCollectable::Reverse(r) => r.on_second_update(),
+        }
+    }
+
+    /// Should be called when the player collects the item
+    ///
+    /// Returns true if the item should be removed from the game
     pub fn on_collect(&mut self, app: &mut App) -> bool {
         match self {
             AnyCollectable::Apple(a) => a.on_collect(app),
